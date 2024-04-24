@@ -10,16 +10,11 @@ pipeline {
 
    agent  any
     stages {
-        stage('checkout') {
+        stage('Git checkout') {
             steps {
-                 script{
-                        dir("terraform")
-                        {
-                            git "https://github.com/Devopslearner2023/TerraformVM-MultiEnv.git"
-                        }
-                    }
-                }
+                git branch: 'main', credentialsId: 'git-cred', url: 'https://github.com/Devopslearner2023/TerraformVM-MultiEnv.git'
             }
+        }
 
         stage('Plan') {
             steps {
