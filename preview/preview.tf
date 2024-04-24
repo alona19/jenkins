@@ -1,9 +1,9 @@
 terraform {
   required_providers {
-      aws = {
-          source = "hashicorp/aws"
-          version = "4.5.0"
-      }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
 
@@ -38,18 +38,6 @@ resource "aws_subnet" "subnet_1b" {
   }
 }
 
-resource "aws_subnet" "subnet_1c" {
-  vpc_id     = aws_vpc.myvpc.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "ap-south-1a"
-
-
-  tags = {
-    Name = "subnet_1c"
-  }
-}
-
-
 resource "aws_internet_gateway" "mygw" {
   vpc_id = aws_vpc.myvpc.id
 
@@ -76,10 +64,6 @@ resource "aws_route_table_association" "associate-1a-rt" {
   subnet_id      = aws_subnet.subnet_1a.id
   route_table_id = aws_route_table.rt_public.id
 }
-resource "aws_route_table_association" "associate-1b-rt" {
-  subnet_id      = aws_subnet.subnet_1b.id
-  route_table_id = aws_route_table.rt_public.id
-}
 
 
 resource "aws_instance" "web001" {
@@ -87,37 +71,25 @@ resource "aws_instance" "web001" {
   instance_type = "t2.micro"
   subnet_id = aws_subnet.subnet_1a.id
   vpc_security_group_ids = [ aws_security_group.webservers.id ]
-  key_name = "AlonaTest"
+  key_name = "Aws-key-2024"
+  user_data = file("script.sh")
   tags = {
     Name = "Web001"
   }
 }
 
-
-
-resource "aws_instance" "web004" {
+resource "aws_instance" "web002" {
   ami           = "ami-007020fd9c84e18c7"
   instance_type = "t2.micro"
   subnet_id = aws_subnet.subnet_1b.id
   vpc_security_group_ids = [ aws_security_group.webservers.id ]
-  key_name = "AlonaTest"
+  key_name = "Aws-key-2024"
+  user_data = file("script.sh")
   tags = {
-    Name = "Web004"
+    Name = "Web002"
   }
 }
 
-
-
-resource "aws_instance" "web007" {
-  ami           = "ami-007020fd9c84e18c7"
-  instance_type = "t2.micro"
-  subnet_id = aws_subnet.subnet_1c.id
-  vpc_security_group_ids = [ aws_security_group.webservers.id ]
-  key_name = "AlonaTest"
-  tags = {
-    Name = "Web007"
-  }
-}
 
 
 resource "aws_security_group" "webservers" {
@@ -174,19 +146,18 @@ resource "aws_security_group" "lb_webservers" {
     Name = "allow_tls"
   }
 }
-resource "aws_lb_target_group" "mywebservergroup" {
-  name     = "webservergroup"
+resource "aws_lb_target_group" "mywebservergroup1" {
+  name     = "webservergroup1"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.myvpc.id
 }
 
 resource "aws_lb_target_group_attachment" "attach_web001_tg" {
-  target_group_arn = aws_lb_target_group.mywebservergroup.arn
+  target_group_arn = aws_lb_target_group.mywebservergroup1.arn
   target_id        = aws_instance.web001.id
   port             = 80
 }
-
 
 resource "aws_lb_target_group" "mywebservergroup2" {
   name     = "webservergroup2"
@@ -195,23 +166,9 @@ resource "aws_lb_target_group" "mywebservergroup2" {
   vpc_id   = aws_vpc.myvpc.id
 }
 
-resource "aws_lb_target_group_attachment" "attach_web004_tg" {
+resource "aws_lb_target_group_attachment" "attach_web002_tg" {
   target_group_arn = aws_lb_target_group.mywebservergroup2.arn
-  target_id        = aws_instance.web004.id
-  port             = 80
-}
-
-
-resource "aws_lb_target_group" "mywebservergroup3" {
-  name     = "webservergroup3"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.myvpc.id
-}
-
-resource "aws_lb_target_group_attachment" "attach_web007_tg" {
-  target_group_arn = aws_lb_target_group.mywebservergroup3.arn
-  target_id        = aws_instance.web007.id
+  target_id        = aws_instance.web002.id
   port             = 80
 }
 
@@ -235,7 +192,7 @@ resource "aws_lb_listener" "front_end_80" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.mywebservergroup.arn
+    target_group_arn = aws_lb_target_group.mywebservergroup1.arn
   }
 }
 
@@ -249,13 +206,4 @@ resource "aws_lb_listener" "front_end_80_1" {
     target_group_arn = aws_lb_target_group.mywebservergroup2.arn
   }
 }
-resource "aws_lb_listener" "front_end_80_2" {
-  load_balancer_arn = aws_lb.lb-webservers.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.mywebservergroup3.arn
-  }
 }
