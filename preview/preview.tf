@@ -65,6 +65,11 @@ resource "aws_route_table_association" "associate-1a-rt" {
   route_table_id = aws_route_table.rt_public.id
 }
 
+resource "aws_route_table_association" "associate-1b-rt" {
+  subnet_id      = aws_subnet.subnet_1b.id
+  route_table_id = aws_route_table.rt_public.id
+}
+
 
 resource "aws_instance" "web001" {
   ami           = "ami-007020fd9c84e18c7"
