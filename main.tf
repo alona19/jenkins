@@ -89,7 +89,7 @@ resource "aws_instance" "web002" {
   subnet_id = aws_subnet.subnet_1b.id
   vpc_security_group_ids = [ aws_security_group.webservers.id ]
   key_name = "Aws-key-2024"
-  user_data = file("script2.sh")
+  user_data = file("script.sh")
   tags = {
     Name = "Web002"
   }
